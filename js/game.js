@@ -62,7 +62,6 @@
       var postion = this.pixelPosition(row, column);
       var box = document.createElement('div');
       box.dataset.space = space;
-      box.innerHTML = space.toString();
       box.column = column;
       box.classList.add('box');
       box.style.height = this.boxHeight + 'px';
@@ -78,6 +77,7 @@
       box.addEventListener('animationend', function() {
         box.style.zIndex = '';
         box.style.animationDuration = '';
+        box.style.animationTimingFunction = '';
         box.style.animationName = '';
       });
       this.container.append(box);
@@ -109,7 +109,9 @@
       var permutation = _.shuffle(spaces);
 
       this.permutors.push(function() {
-        var i, box, destination, newRow, newColumn, newPosition;
+        var i, box,
+            newRow, newColumn, newPosition,
+            oldRow, oldColumn, oldPosition;
         var boxes = [];
         var positions = [];
         var keyFrames = '';
@@ -117,22 +119,32 @@
         console.log('spaces', spaces, 'permutation', permutation);
 
         for (i = 0; i < spaces.length; i++) {
-          destination = permutation[i];
-          
-          newRow = Math.floor(destination / that.rows);
-          newColumn = destination % that.rows;
-          newPosition = that.pixelPosition(newRow, newColumn);
-          positions.push(newPosition);
-
           box = that.container.querySelector(
             '.box[data-space="' + spaces[i] + '"]'
           );
           boxes.push(box);
 
-          keyFrames += '@keyframes move-' + i +
-            '{ from { transform: ' + box.style.transform +
-            '; } to { transform: translate( ' + newPosition.x + 'px, ' +
-            newPosition.y + 'px); } }';
+          newRow = Math.floor(permutation[i] / that.rows);
+          newColumn = permutation[i] % that.rows;
+          newPosition = that.pixelPosition(newRow, newColumn);
+          positions.push(newPosition);
+
+          oldRow = Math.floor(spaces[i] / that.rows);
+          oldColumn = spaces[i] % that.rows;
+          oldPosition = that.pixelPosition(oldRow, oldColumn);
+
+          if (spaces[i] !== permutation[i]) {
+            keyFrames += '@keyframes move-' + i + '{ ' +
+              'from { transform: ' +
+              'translate( ' + oldPosition.x + 'px, ' + oldPosition.y + 'px) ' +
+              'scale(1, 1); opacity: 1; }' +
+              '50% { transform: ' +
+              'translate( ' + ((oldPosition.x + newPosition.x) / 2) + 'px, ' +
+              ((oldPosition.y + newPosition.y) / 2) + 'px) ' +
+              'scale(0.8, 0.8); opacity: 0.5; }' +
+              'to { transform: ' +
+              'translate( ' + newPosition.x + 'px, ' + newPosition.y + 'px) ' +
+              'scale(1, 1); opacity: 1; } }';
           // placeholder = $(box).clone()[0];
           // placeholder.classList.remove('box');
           // placeholder.classList.add('box-clone');
@@ -140,25 +152,27 @@
           // Fixer.fix(box);
           // document.body.append(box);
           // placeholders.push(placeholder);
-          // positions.push([box.style.left, box.style.top]);
+            // positions.push([box.style.left, box.style.top]);
+          }
         }
 
         document.querySelector('style.keyframes').innerHTML = keyFrames;
 
         for (i = 0; i < spaces.length; i++) {
-          box = boxes[i];
+          if (spaces[i] !== permutation[i]) {
+            box = boxes[i];
 
-          box.dataset.space = permutation[i];
+            box.dataset.space = permutation[i];
 
-          box.style.zIndex = 5 + i;
-          box.style.animationDuration = '1s';
-          box.style.animationName = 'move-' + i;
-          box.style.transform = 'translate(' + positions[i].x + 'px, ' + positions[i].y + 'px)';
+            box.style.zIndex = 5 + i;
+            box.style.animationDuration = '0.5s';
+            box.style.animationTimingFunction = 'ease-in-out';
+
+            box.style.animationName = 'move-' + i;
+            box.style.transform = 'translate(' + positions[i].x + 'px, ' + positions[i].y + 'px)';
+          }
         }
 
-        console.log(_.map(_.range(that.rows * that.columns), function(s) {
-          return that.container.querySelector('.box[data-space="' + s + '"]').innerHTML;
-        }))
 
         //  (function() {
         //    var destination = permutation[i];

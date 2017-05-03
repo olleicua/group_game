@@ -9,8 +9,8 @@
     $gameContainer.innerHTML = '';
     GroupGame.newGame({
       container: $gameContainer,
-      columns: 3,
-      rows: 3
+      columns: 8,
+      rows: 8
     });
   });
 
